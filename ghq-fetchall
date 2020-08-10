@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ghq list -p |sed -e 's/^/cd /g' -e 's/$/; git fetch/g' |sh
