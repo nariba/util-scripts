@@ -1,0 +1,4 @@
+#!/bin/sh
+
+export PATH=`echo $PATH | sed 's/:/:\n/g' | grep -v linuxbrew | xargs | sed 's/ //g'`
+export MANPATH=`echo $MANPATH | sed 's/:/:\n/g' | grep -v linuxbrew | xargs | sed 's/ //g'`
