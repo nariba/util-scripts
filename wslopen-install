@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Make a bin folder in your home directory
+mkdir -p $HOME/local/bin
+
+# Add the bin folder to your PATH in your bashrc
+echo '[[ -e ~/local/bin ]] && export PATH=$PATH:~/local/bin' >> ~/.zshrc.mine
+
+# Download the script to a file named 'wsl-open'
+curl -o ~/local/bin/wsl-open https://raw.githubusercontent.com/4U6U57/wsl-open/master/wsl-open.sh
