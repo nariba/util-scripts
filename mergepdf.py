@@ -8,12 +8,12 @@ def main():
     print(filelist)
     exit
     merger = PyPDF3.PdfFileMerger()
-    
+
     for i in filelist:
         pathroot, ext = os.path.splitext(i)
         if ext == '.pdf':
             merger.append(i)
-    
+
     merger.write('./merger.pdf')
     merger.close()
 
