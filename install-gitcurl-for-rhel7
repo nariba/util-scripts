@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# yum install asciidoc xmlto zlib-devel libcurl-devel
+
+# git
+git clone https://github.com/git/git
+cd git
+make -j configure
+./configure --prefix=$HOME/local
+make -j all doc
+make install install-doc install-html
+
+# curl
+cd $HOME/local/bin
+wget https://github.com/moparisthebest/static-curl/releases/download/v7.82.0/curl-amd64
+chmod 755 $HOME/local/bin/curl-amd64
+ln -s $HOME/local/bin/curl-amd64 $HOME/local/bin/curl
