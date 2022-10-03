@@ -1,0 +1,16 @@
+#!/bin/sh
+
+if [ $# -ne 1 ]; then
+    echo 'usage: install-yay DIR'
+    exit 1
+fi
+DIR=$1
+if [ ! -d $DIR ]; then
+    echo 'Invalid Directory!'
+    echo 'usage: install-yay DIR'
+    exit 2
+fi
+
+git clone https://aur.archlinux.org/yay.git $DIR/yay
+cd $DIR/yay
+makepkg -si
