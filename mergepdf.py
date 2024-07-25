@@ -5,6 +5,7 @@ import PyPDF3
 
 def main():
     filelist = os.listdir(input())
+    filelist.sort()
     print(filelist)
     exit
     merger = PyPDF3.PdfFileMerger()
