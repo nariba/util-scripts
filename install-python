@@ -1,0 +1,13 @@
+#!/bin/sh -ex
+
+PYTHON_VERSION="3.12.9"
+
+wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz
+tar xvfz Python-${PYTHON_VERSION}.tgz
+cd Python-${PYTHON_VERSION}
+
+./configure CFLAGS=-fPIC \
+        --prefix=/opt/python-${PYTHON_VERSION}
+make -j
+make install
+
