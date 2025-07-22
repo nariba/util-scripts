@@ -2,6 +2,11 @@
 
 for vmname in `virsh list --state-shutoff --name`
 do
+    if ! virsh list --state-shutoff --name | grep -qx $vmname;
+    then
+        echo $vmname 'is running, skip'
+        continue
+    fi
     echo $vmname 'compress start'
     # sudo virsh domblklist $vmname | grep qcow2 の結果が空の場合にはスキップ
     if [ -z "`virsh domblklist $vmname | grep qcow2`" ];
