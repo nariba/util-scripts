@@ -14,17 +14,22 @@ do
         echo $vmname 'is running so skip'
         continue
     fi
-    imagefile=`virsh domblklist $vmname | grep qcow2 | awk '{print $2}'`
-    # qcow2ファイルがない場合にはスキップ
-    if [ ! -f $imagefile ];
-    then
-        echo $vmname 'image file not found so skip'
-        continue
-    fi
-    tmp=${imagefile%.*}
-    sudo qemu-img convert -p -c -f qcow2 -O qcow2 ${tmp}{,.compressed}.qcow2
-    sudo chown qemu:libvirt_shared ${tmp}.compressed.qcow2
-    sudo mv $tmp.compressed.qcow2 $tmp.qcow2
+
+    for imagefile in `virsh domblklist $vmname | grep qcow2 | awk '{print $2}'`
+    do
+        # qcow2ファイルがない場合にはスキップ
+        if [ ! -f $imagefile ];
+        then
+            echo $vmname 'image file not found so skip'
+            continue
+        fi
+        echo $vmname 'imagefile: ' $imagefile 'compress start'
+        tmp=${imagefile%.*}
+        sudo qemu-img convert -p -c -f qcow2 -O qcow2 ${tmp}{,.compressed}.qcow2
+        sudo chown qemu:libvirt_shared ${tmp}.compressed.qcow2
+        sudo mv $tmp.compressed.qcow2 $tmp.qcow2
+        echo $vmname 'imagefile: ' $imagefile 'compress finish'
+    done
 
     echo $vmname 'compress finish'
 done
