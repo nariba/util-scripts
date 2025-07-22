@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 for vmname in `virsh list --state-shutoff --name`
 do
