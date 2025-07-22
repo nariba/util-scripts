@@ -1,15 +1,15 @@
 #!/bin/sh
 
-for vmname in `sudo virsh list --state-shutoff --name`
+for vmname in `virsh list --state-shutoff --name`
 do
     echo $vmname 'compress start'
     # sudo virsh domblklist $vmname | grep qcow2 の結果が空の場合にはスキップ
-    if [ -z "`sudo virsh domblklist $vmname | grep qcow2`" ];
+    if [ -z "`virsh domblklist $vmname | grep qcow2`" ];
     then
         echo $vmname 'is running so skip'
         continue
     fi
-    imagefile=`sudo virsh domblklist $vmname | grep qcow2 | awk '{print $2}'`
+    imagefile=`virsh domblklist $vmname | grep qcow2 | awk '{print $2}'`
     # qcow2ファイルがない場合にはスキップ
     if [ ! -f $imagefile ];
     then
