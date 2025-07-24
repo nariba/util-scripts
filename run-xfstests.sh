@@ -32,5 +32,5 @@ export TEST_DEV=$TEST_DEV
 export TEST_DIR=/mnt/test
 export SCRATCH_DEV=$SCRATCH_DEV
 export SCRATCH_MNT=/mnt/scratch
-" > local.config
+" > /var/lib/xfstests/local.config
 

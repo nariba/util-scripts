@@ -1,7 +1,7 @@
 #!/bin/sh
 
 LTP_TOP_DIR=${1:-/root/ltp}
-LTP_DESTDIR=${LTP_TOP_DIR}-bin
+LTP_DESTDIR=${2:-/}
 
 git clone https://github.com/linux-test-project/ltp $LTP_TOP_DIR
 cd $LTP_TOP_DIR
