@@ -1,0 +1,13 @@
+[Unit]
+Description=Updates /etc/hosts based on the output of 'virsh net-dhcp-leases'.
+After=local-fs.target
+ConditionPathExists=/opt/vm-genhosts/bin
+
+[Service]
+ExecStart=/opt/vm-genhosts/bin/modify-hosts.sh
+Restart=no
+Type=simple
+
+
+[Install]
+WantedBy=multi-user.target
