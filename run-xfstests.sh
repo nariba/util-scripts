@@ -18,7 +18,7 @@ fi
 for i in test scratch;
 do
     if [ ! -f $i.img ]; then
-        dd if=/dev/zero of=$i.img bs=1G count=10
+        dd if=/dev/zero of=$i.img bs=1G count=15
         mkfs.xfs $i.img
     fi
     j=$(echo $i | tr a-z A-Z)
