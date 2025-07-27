@@ -17,8 +17,10 @@ fi
 
 for i in test scratch;
 do
-    dd if=/dev/zero of=$i.img bs=1G count=10
-    mkfs.xfs $i.img
+    if [ ! -f $i.img ]; then
+        dd if=/dev/zero of=$i.img bs=1G count=10
+        mkfs.xfs $i.img
+    fi
     j=$(echo $i | tr a-z A-Z)
     eval ${j}_DEV=$(losetup -f --show $i.img)
     if [ ! -d /mnt/$i ]; then
