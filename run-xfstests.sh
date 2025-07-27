@@ -8,7 +8,9 @@ if [ ! -d $XFS_DIRNAME ]; then
     git clone https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev $XFS_DIRNAME
 else
     echo "$XFS_DIRNAME already exists"
-    exit 1
+    cd $XFS_DIRNAME
+    git pull
+    cd ..
 fi
 
 
