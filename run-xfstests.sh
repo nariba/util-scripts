@@ -76,7 +76,7 @@ export SCRATCH_DEV=$SCRATCH_DEV
 export SCRATCH_MNT=/mnt/scratch
 " > /var/lib/xfstests/local.config
 
-useradd -m fsgqa
-useradd 123456-fsgqa
-useradd fsgqa2
+useradd -M fsgqa
+useradd -M 123456-fsgqa
+useradd -M fsgqa2
 groupadd fsgqa
