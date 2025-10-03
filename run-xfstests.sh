@@ -15,6 +15,10 @@ while [[ $# -gt 0 ]]; do
             FSTYPE="$2"
             shift 2
             ;;
+        --runtest)
+            DO_TEST=1
+            shift
+            ;;
         *)
             shift
             ;;
@@ -25,6 +29,7 @@ done
 XFS_DIRNAME="${XFS_DIRNAME:-xfstests-dev}"
 XFS_DESTDIR="${XFS_DESTDIR:-/var/lib/xfstests}"
 FSTYPE="${FSTYPE:-xfs}"
+DO_TEST="${DO_TEST:-0}"
 
 if [ "$FSTYPE" != "xfs" ] && [ "$FSTYPE" != "ext4" ]; then
     echo "Invalid FSTYPE: $FSTYPE. Only 'xfs' and 'ext4' are supported."
@@ -88,4 +93,12 @@ if ! getent group fsgqa >/dev/null 2>&1; then
     groupadd fsgqa
 else
     echo "Group fsgqa already exists"
+fi
+
+if [ "$DO_TEST" = "1" ]; then
+    cd $XFS_DESTDIR
+    unbuffer ./check | tee /root/run-xfstests-$FSTYPE.log
+    exit 0
+else
+    echo "Skipping tests as DO_TEST is not set to 1."
 fi
