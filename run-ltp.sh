@@ -10,6 +10,6 @@ make autotools
 mkdir -p build
 cd build
 ../configure
-make -f ../Makefile "top_srcdir=$LTP_TOP_DIR" "top_builddir=$LTP_TOP_DIR/build" -j2
-make -f ../Makefile "top_srcdir=$LTP_TOP_DIR" "top_builddir=$LTP_TOP_DIR/build" -j2 \
+make -f ../Makefile "top_srcdir=$LTP_TOP_DIR" "top_builddir=$LTP_TOP_DIR/build" -j$(nproc)
+make -f ../Makefile "top_srcdir=$LTP_TOP_DIR" "top_builddir=$LTP_TOP_DIR/build" -j$(nproc) \
     "DESTDIR=$LTP_DESTDIR" "SKIP_IDCHECK=0" install
