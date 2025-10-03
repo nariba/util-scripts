@@ -1,8 +1,35 @@
 #!/bin/sh -ex
 
-XFS_DIRNAME=${1:-xfstests-dev}
-echo $XFS_DIRNAME
+# Parse options
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dirname)
+            XFS_DIRNAME="$2"
+            shift 2
+            ;;
+        --destdir)
+            XFS_DESTDIR="$2"
+            shift 2
+            ;;
+        --fstype)
+            FSTYPE="$2"
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
 
+# Set defaults if not set
+XFS_DIRNAME="${XFS_DIRNAME:-xfstests-dev}"
+XFS_DESTDIR="${XFS_DESTDIR:-/var/lib/xfstests}"
+FSTYPE="${FSTYPE:-xfs}"
+
+if [ "$FSTYPE" != "xfs" ] && [ "$FSTYPE" != "ext4" ]; then
+    echo "Invalid FSTYPE: $FSTYPE. Only 'xfs' and 'ext4' are supported."
+    exit 1
+fi
 
 if [ ! -d $XFS_DIRNAME ]; then
     git clone https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev $XFS_DIRNAME
@@ -19,7 +46,14 @@ for i in test scratch;
 do
     if [ ! -f $i.img ]; then
         dd if=/dev/zero of=$i.img bs=1G count=15
-        mkfs.xfs $i.img
+    else
+        echo "$i.img already exists"
+    fi
+
+    if [ "$FSTYPE" = "xfs" ]; then
+        mkfs.xfs -f $i.img
+    elif [ "$FSTYPE" = "ext4" ]; then
+        mkfs.ext4 -F $i.img
     fi
     j=$(echo $i | tr a-z A-Z)
     if [ ! -z $(losetup -a | grep $i.img) ]; then
