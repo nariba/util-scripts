@@ -74,9 +74,18 @@ export TEST_DEV=$TEST_DEV
 export TEST_DIR=/mnt/test
 export SCRATCH_DEV=$SCRATCH_DEV
 export SCRATCH_MNT=/mnt/scratch
-" > /var/lib/xfstests/local.config
+" > $XFS_DESTDIR/local.config
 
-useradd -M fsgqa
-useradd -M 123456-fsgqa
-useradd -M fsgqa2
-groupadd fsgqa
+for user in fsgqa 123456-fsgqa fsgqa2; do
+    if ! id "$user" >/dev/null 2>&1; then
+        useradd -M "$user"
+    else
+        echo "User $user already exists"
+    fi
+done
+
+if ! getent group fsgqa >/dev/null 2>&1; then
+    groupadd fsgqa
+else
+    echo "Group fsgqa already exists"
+fi
