@@ -19,17 +19,25 @@ while [[ $# -gt 0 ]]; do
             DO_TEST=1
             shift
             ;;
+        --exclude)
+            EXCLUDE=1
+            EXCLUDE_FILE="$2"
+            shift 2
+            ;;
         *)
             shift
             ;;
     esac
 done
 
+CURRENT_DIR=$(pwd)
+
 # Set defaults if not set
 XFS_DIRNAME="${XFS_DIRNAME:-xfstests-dev}"
 XFS_DESTDIR="${XFS_DESTDIR:-/var/lib/xfstests}"
 FSTYPE="${FSTYPE:-xfs}"
 DO_TEST="${DO_TEST:-0}"
+EXCLUDE="${EXCLUDE:-0}"
 
 if [ "$FSTYPE" != "xfs" ] && [ "$FSTYPE" != "ext4" ]; then
     echo "Invalid FSTYPE: $FSTYPE. Only 'xfs' and 'ext4' are supported."
@@ -97,7 +105,16 @@ fi
 
 if [ "$DO_TEST" = "1" ]; then
     cd $XFS_DESTDIR
-    unbuffer ./check | tee /root/run-xfstests-$FSTYPE.log
+    if [ "$EXCLUDE" = "1" ]; then
+        EXCLUDE_FILE_PATH="$CURRENT_DIR/$EXCLUDE_FILE"
+        if [ ! -f "$EXCLUDE_FILE_PATH" ]; then
+            echo "$EXCLUDE_FILE_PATH not found."
+            exit 1
+        fi
+        unbuffer ./check -E $EXCLUDE_FILE_PATH | tee /root/run-xfstests-$FSTYPE.log
+    else
+        unbuffer ./check | tee /root/run-xfstests-$FSTYPE.log
+    fi
     exit 0
 else
     echo "Skipping tests as DO_TEST is not set to 1."
