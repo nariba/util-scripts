@@ -24,6 +24,10 @@ while [[ $# -gt 0 ]]; do
             EXCLUDE_FILE="$2"
             shift 2
             ;;
+        --update)
+            UPDATE=1
+            shift
+            ;;
         *)
             shift
             ;;
@@ -38,6 +42,7 @@ XFS_DESTDIR="${XFS_DESTDIR:-/var/lib/xfstests}"
 FSTYPE="${FSTYPE:-xfs}"
 DO_TEST="${DO_TEST:-0}"
 EXCLUDE="${EXCLUDE:-0}"
+UPDATE="${UPDATE:-0}"
 
 if [ "$FSTYPE" != "xfs" ] && [ "$FSTYPE" != "ext4" ]; then
     echo "Invalid FSTYPE: $FSTYPE. Only 'xfs' and 'ext4' are supported."
@@ -48,9 +53,12 @@ if [ ! -d $XFS_DIRNAME ]; then
     git clone https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev $XFS_DIRNAME
 else
     echo "$XFS_DIRNAME already exists"
-    cd $XFS_DIRNAME
-    git pull
-    cd ..
+    if [ "$UPDATE" = "1" ]; then
+        echo "Updating $XFS_DIRNAME"
+        cd $XFS_DIRNAME
+        git pull
+        cd ..
+    fi
 fi
 
 
