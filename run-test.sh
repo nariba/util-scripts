@@ -1,0 +1,73 @@
+#!/bin/sh
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dirname-xfs)
+            XFS_DIRNAME="$2"
+            shift 2
+            ;;
+        --destdir-xfs)
+            XFS_DESTDIR="$2"
+            shift 2
+            ;;
+        --dirname-ltp)
+            LTP_DIRNAME="$2"
+            shift 2
+            ;;
+        --destdir-ltp)
+            LTP_DESTDIR="$2"
+            shift 2
+            ;;
+        --fstype)
+            FSTYPE="$2"
+            shift 2
+            ;;
+        --exclude-xfs)
+            EXCLUDE_FILE_XFS="$2"
+            shift 2
+            ;;
+        --exclude-ext4)
+            EXCLUDE_FILE_EXT4="$2"
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+dirname=$(date +%Y%m%d)
+
+mkdir -p /root/$dirname
+
+cd /root/xfstests-dev
+git log -1 > /root/$dirname/xfstests-gitlog.txt
+cd /root
+
+for fs in xfs ext4; do
+    echo "Running xfstests for filesystem: $fs"
+    if [ -f excludefile-$fs ]; then
+        echo "Exclusion file for $fs found. Using it."
+        /root/util-scripts/run-xfstests.sh --fstype $fs --runtest --exclude excludefile-$fs
+    else
+        echo "No exclusion file for $fs found. Running all tests."
+        /root/util-scripts/run-xfstests.sh --fstype $fs --runtest
+    fi
+    mv /var/lib/xfstests/results /root/$dirname/xfstests-$fs-results
+    mv /root/run-xfstests-$fs.log /root/$dirname/
+    cp excludefile-$fs /root/$dirname/
+done
+
+cd /root/ltp
+git log -1 > /root/$dirname/ltp-gitlog.txt
+cd /root
+
+echo "Running LTP tests..."
+/root/util-scripts/run-ltp.sh --runtest
+mv /opt/ltp/results /root/$dirname/ltp-results
+mv /opt/ltp/output /root/$dirname/ltp-output
+mv /root/runltp.log /root/$dirname/
+
+echo "Generating sosreport..."
+sos report --batch
+mv /var/tmp/sosreport-* /root/$dirname/
