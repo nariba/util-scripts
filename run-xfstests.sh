@@ -51,6 +51,7 @@ fi
 
 if [ ! -d $XFS_DIRNAME ]; then
     git clone https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev $XFS_DIRNAME
+    NEED_BUILD=1
 else
     echo "$XFS_DIRNAME already exists"
     if [ "$UPDATE" = "1" ]; then
@@ -58,6 +59,7 @@ else
         cd $XFS_DIRNAME
         git pull
         cd ..
+        NEED_BUILD=1
     fi
 fi
 
@@ -88,8 +90,13 @@ do
     # eval ${j}_DEV="/dev/loop0"
 done
 
-cd $XFS_DIRNAME
-make -j && make install
+if [ "$NEED_BUILD" = "1" ] || [ ! -d $XFS_DESTDIR ]; then
+    cd $XFS_DIRNAME
+    make -j && make install
+else
+    echo "$XFS_DESTDIR already exists. Skipping build."
+fi
+
 echo "
 export TEST_DEV=$TEST_DEV
 export TEST_DIR=/mnt/test
