@@ -79,7 +79,7 @@ do
         mkfs.ext4 -F $i.img
     fi
     j=$(echo $i | tr a-z A-Z)
-    if [ -z $(losetup -a | grep $i.img) ]; then
+    if losetup -a | grep -vq $i.img; then
         eval ${j}_DEV=$(losetup -f --show $i.img)
     else
         eval ${j}_DEV=$(losetup -a | grep $i.img | awk -F: '{print $1}')
