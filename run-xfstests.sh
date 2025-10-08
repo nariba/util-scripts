@@ -79,10 +79,10 @@ do
         mkfs.ext4 -F $i.img
     fi
     j=$(echo $i | tr a-z A-Z)
-    if losetup -a | grep -vq $i.img; then
-        eval ${j}_DEV=$(losetup -f --show $i.img)
-    else
+    if losetup -a | grep -q $i.img; then
         eval ${j}_DEV=$(losetup -a | grep $i.img | awk -F: '{print $1}')
+    else
+        eval ${j}_DEV=$(losetup -f --show $i.img)
     fi
     if [ ! -d /mnt/$i ]; then
         mkdir /mnt/$i
