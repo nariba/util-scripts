@@ -36,7 +36,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-dirname=$(date +%Y%m%d)
+dirname=$(hostname)-$(date +%Y%m%d)
 
 mkdir -p /root/$dirname
 
