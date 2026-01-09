@@ -14,6 +14,10 @@ while [ $# -gt 0 ]; do
             LTP_DESTDIR="$2"
             shift 2
             ;;
+        --rebuild)
+            LTP_REBUILD=1
+            shift
+            ;;
         *)
             break
             ;;
@@ -23,11 +27,16 @@ done
 DO_TEST=${DO_TEST:-0}
 LTP_TOP_DIR=${LTP_TOP_DIR:-/root/ltp}
 LTP_DESTDIR=${LTP_DESTDIR:-/}
+LTP_REBUILD=${LTP_REBUILD:-0}
 
 if [ ! -d "$LTP_TOP_DIR" ]; then
     git clone https://github.com/linux-test-project/ltp $LTP_TOP_DIR
-    cd $LTP_TOP_DIR
+    LTP_REBUILD=1
+fi
 
+cd $LTP_TOP_DIR
+
+if [ "$LTP_REBUILD" = "1" ]; then
     make autotools
     mkdir -p build
     cd build
