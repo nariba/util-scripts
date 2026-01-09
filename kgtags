@@ -1,0 +1,179 @@
+#!/usr/bin/env python
+
+from genericpath import exists
+import os
+import sys
+from sys import argv
+import shutil
+
+# Configuration: Override with environment variables if needed
+work_dir_root: str = os.environ.get('WORK_DIR_ROOT', os.path.join(os.path.expanduser('~'), 'tmp', 'build-srctour-kernel'))
+html_destdir: str = os.environ.get('HTML_DESTDIR', os.path.join(os.path.expanduser('~'), 'html'))
+
+def determine_dirname_from_srpmname(srpmfilename: str):
+    # expected srpmfilename: kernel-5.14.0-70.13.1.el9_0.src.rpm
+    #                        kernel-5.18.16-200.fc36.src.rpm
+    # expected output: linux-5.14.0-70.13.1.el9_0
+    return str(srpmfilename.replace('kernel', 'linux').replace('.src.rpm', ''))
+
+def detect_version(srpmfilename: str) -> tuple:
+    # expected srpmfilename: kernel-5.14.0-70.13.1.el9_0.src.rpm
+    #                        kernel-5.18.16-200.fc36.src.rpm
+    # expected output: (RHEL9, 9.0)
+    #                  (RHEL10, 10.1)
+    #                  (Fedora, 36)
+    version: tuple = ()
+    
+    # elXXX部分を取り出す
+    tmp = srpmfilename.split('.')[-3]
+    print("tmp: " + tmp)
+    if 'el' in tmp and '_' in tmp:
+        tmp = tmp.replace('el', '')
+        major_version = tmp.split('_')[0]
+        minor_version = tmp.split('_')[1]
+        version = ('RHEL' + major_version, major_version + '.' + minor_version)
+    elif 'el' in tmp:
+        tmp = tmp.replace('el', '')
+        major_version = tmp
+        version = ('RHEL' + major_version, major_version)
+    elif 'fc' in tmp:
+        version_number = tmp.replace('fc', '')
+        version = ('Fedora', version_number)
+    return version
+
+def main():
+    print(argv)
+
+    # Check argv
+    if len(argv) < 2:
+        print('Error: argv.')
+        sys.exit(1)
+
+    first: bool = True
+    current_dir: str = os.getcwd()
+    for i in argv:
+        print('i: ' + str(i))
+        # 最初の引数はスクリプト本体なのでスキップ
+        if first:
+            first = False
+            continue
+        
+        abs_i: str = os.path.abspath(i)
+        if os.path.exists(work_dir_root):
+            shutil.rmtree(work_dir_root)
+        os.makedirs(work_dir_root)
+        os.chdir(work_dir_root)
+        print("pwd: " + os.getcwd())
+        
+        os.system('rpmdev-extract ' + str(abs_i) + ' > /dev/null 2>&1')
+        extract_dir_list: list = os.listdir(work_dir_root)
+        if len(extract_dir_list) != 1:
+            print('Error: Extracted directory is not clean.')
+            sys.exit(2)
+        extract_dir: str = extract_dir_list[0]
+        tmp: list = os.listdir(os.path.join(work_dir_root, str(extract_dir)))
+        tarball_filename: str = [file for file in tmp if file.startswith('linux-') and file.endswith('.tar.xz')][0]
+        # tarball_filename: str = [file for file in tmp if file.startswith('linux-') and file.endswith('.tar.bz2')][0]
+        
+        os.chdir(os.getcwd())
+        print("pwd: " + os.getcwd())
+        
+        os.chdir(os.path.join(work_dir_root, str(extract_dir)))
+        print("pwd: " + os.getcwd())
+        
+        # ここ本当にstr()いる？
+        print("tar xf: " + str(tarball_filename))
+        os.system('tar xf ' + str(tarball_filename))
+        
+        # linux-6.7.7.tar.xzのようなファイル名からtarコマンドによる解凍を行ったときに
+        # 生成されるディレクトリ(linux-6.7.7)をlinux_dirnameに格納する
+        tmp: str = os.path.splitext(tarball_filename)[0]
+        linux_dirname: str = os.path.splitext(tmp)[0]
+        print(linux_dirname)
+        
+        # /home/nariba/tmp/build-srctour-kernel/kernel-6.7.7-200.fc39.src/linux-6.7.7
+        # extract_dir: kernel-6.7.7-200.fc39.src
+        # linux_dirname: linux-6.7.7
+        # work_dir_root: /home/nariba/tmp/build-srctour-kernel
+        # linux_root_dir: /home/nariba/tmp/build-srctour-kernel/kernel-6.7.7-200.fc39.src/linux-6.7.7
+        tmp: str = os.path.join(extract_dir, linux_dirname)
+        linux_root_dir: str = os.path.join(work_dir_root, tmp)
+        os.chdir(linux_root_dir)
+        print("pwd: " + os.getcwd())
+        
+        # Run gtags and htags
+        os.system('gtags && htags -safnowF > /dev/null 2>&1')
+
+        # Detect version
+        version: tuple = detect_version(i)
+        print("version: " + str(version))
+        
+        # Move HTML files
+        move_dest: str = ''
+        if 'RHEL' in version[0]:
+            if '.' in version[1]:
+                move_dest: str = os.path.join(html_destdir, version[0], version[1], linux_dirname)
+            else:
+                move_dest: str = os.path.join(html_destdir, version[0], linux_dirname)
+        elif 'Fedora' in version[0]:
+            move_dest: str = os.path.join(html_destdir, version[0], linux_dirname)
+        print("move_dest: " + str(move_dest))
+        
+        shutil.move(linux_root_dir, move_dest)
+        os.system('sudo chcon  -R -t container_file_t ' + str(move_dest))
+        os.chdir(work_dir_root)
+        print("pwd: " + os.getcwd())
+        print("rm -rf: " + str(extract_dir))
+        os.system('rm -rf ' + str(extract_dir))
+        os.chdir(current_dir)
+        print("pwd: " + os.getcwd())
+        # os.system('tar xvf ' + str())
+        
+    #     srpm_fullpath: str = os.path.abspath(i)
+    #     if not os.path.exists(srpm_fullpath):
+    #         print('Error: File not found.')
+    #         sys.exit(2)
+
+    #     # タプルって型アノテーション使えないんだっけ？
+    #     # srpm_dir, srpm_name = os.path.split(srpm_fullpath)
+
+    #     # Deploy RPM 
+    #     if not os.path.isdir(rpmbuild_dir_root):
+    #         print(str(rpmbuild_dir_root))
+    #         print('Error: tmp_dir not found')
+    #         sys.exit(3)
+
+    #     # top_dir_name: str = determine_dirname_from_srpmname(srpm_name)
+    #     os.chdir(os.path.join(rpmbuild_dir_root, 'SOURCES'))
+    #     os.system('rpm2cpio ' + str(srpm_fullpath) + '| cpio -id')
+
+    #     # new_archive_dir_name: str = os.path.join(tmp_dir_root, top_dir_name)
+    #     # os.makedirs(new_archive_dir_name)
+    #     # os.chdir(new_archive_dir_name)
+    
+    #     # Unarchive source
+    #     os.rename('kernel.spec', '../SPECS/kernel.spec')
+    #     os.chdir(os.path.join(rpmbuild_dir_root, 'SPECS'))
+    #     os.system('rpmbuild -bp kernel.spec')
+
+	# # G o to the extracted source directory
+    #     build_dir: str = os.path.join(rpmbuild_dir_root, 'BUILD')
+    #     os.chdir(build_dir)
+
+    #     dir: list = os.listdir(build_dir)
+    #     kernel_root_dir: str = os.path.join(build_dir, dir[0])
+    #     os.chdir(kernel_root_dir)
+
+    #     dir: list = os.listdir(kernel_root_dir)
+    #     linux_dirname: str = dir[0]
+    #     linux_root_dir: str = os.path.join(kernel_root_dir, dir[0])
+    #     os.chdir(linux_root_dir)
+
+    #     # Run gtags and htags
+    #     os.system('gtags && htags -safnowF')
+
+    #     # Move HTML files
+    #     shutil.move(linux_root_dir, os.path.join(html_destdir, linux_dirname))
+
+if __name__ == '__main__':
+    main()
