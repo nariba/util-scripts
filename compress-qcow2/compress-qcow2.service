@@ -1,0 +1,13 @@
+[Unit]
+Description = compress qcow2 images of shutoff VMs
+After=local-fs.target
+ConditionPathExists=/opt/compress-qcow2/bin/compress-qcow2.sh
+
+[Service]
+ExecStart=/opt/compress-qcow2/bin/compress-qcow2.sh
+Restart=no
+Type=simple
+
+
+[Install]
+WantedBy=multi-user.target

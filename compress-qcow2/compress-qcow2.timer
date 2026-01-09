@@ -1,0 +1,11 @@
+[Unit]
+Description=Run compress-qcow2.service per 1 week
+
+[Timer]
+Unit=compress-qcow2.service
+OnCalendar=weekly
+AccuracySec=1h
+Persistent=false
+
+[Install]
+WantedBy=timers.target

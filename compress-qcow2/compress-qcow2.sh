@@ -25,9 +25,9 @@ do
         fi
         echo $vmname 'imagefile: ' $imagefile 'compress start'
         tmp=${imagefile%.*}
-        sudo qemu-img convert -p -c -f qcow2 -O qcow2 ${tmp}{,.compressed}.qcow2
-        sudo chown qemu:libvirt_shared ${tmp}.compressed.qcow2
-        sudo mv $tmp.compressed.qcow2 $tmp.qcow2
+        qemu-img convert -p -c -f qcow2 -O qcow2 ${tmp}{,.compressed}.qcow2
+        chown qemu:libvirt_shared ${tmp}.compressed.qcow2
+        mv $tmp.compressed.qcow2 $tmp.qcow2
         echo $vmname 'imagefile: ' $imagefile 'compress finish'
     done
 
