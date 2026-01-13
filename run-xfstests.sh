@@ -24,6 +24,10 @@ while [[ $# -gt 0 ]]; do
             EXCLUDE_FILE="$2"
             shift 2
             ;;
+        --rebuild)
+            NEED_BUILD=1
+            shift
+            ;;
         --update)
             UPDATE=1
             shift
@@ -93,6 +97,10 @@ done
 if [ "$NEED_BUILD" = "1" ] || [ ! -d $XFS_DESTDIR ]; then
     cd $XFS_DIRNAME
     make -j && make install
+    for testtype in generic xfs ext4; do
+        mv $XFS_DESTDIR/tests/$testtype/group.list $XFS_DESTDIR/tests/$testtype/group.list.bak
+        awk '{if ($0 ~ /^[0-9]+ / && !/auto/) {$2 = "auto " $2} print}' $XFS_DESTDIR/tests/$testtype/group.list.bak > $XFS_DESTDIR/tests/$testtype/group.list
+    done
 else
     echo "$XFS_DESTDIR already exists. Skipping build."
 fi
