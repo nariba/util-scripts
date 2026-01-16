@@ -46,16 +46,20 @@ cd /root
 
 for fs in xfs ext4; do
     echo "Running xfstests for filesystem: $fs"
-    if [ -f excludefile-$fs ]; then
+    if [ "$fs" = "xfs" ] && [ -n "$EXCLUDE_FILE_XFS" ]; then
         echo "Exclusion file for $fs found. Using it."
-        /root/util-scripts/run-xfstests.sh --fstype $fs --runtest --exclude excludefile-$fs
+        /root/util-scripts/run-xfstests.sh --fstype $fs --runtest --exclude $EXCLUDE_FILE_XFS
+        cp $EXCLUDE_FILE_XFS /root/$dirname/
+    elif [ "$fs" = "ext4" ] && [ -n "$EXCLUDE_FILE_EXT4" ]; then
+        echo "Exclusion file for $fs found. Using it."
+        /root/util-scripts/run-xfstests.sh --fstype $fs --runtest --exclude $EXCLUDE_FILE_EXT4
+        cp $EXCLUDE_FILE_EXT4 /root/$dirname/
     else
         echo "No exclusion file for $fs found. Running all tests."
         /root/util-scripts/run-xfstests.sh --fstype $fs --runtest
     fi
     mv /var/lib/xfstests/results /root/$dirname/xfstests-$fs-results
     mv /root/run-xfstests-$fs.log /root/$dirname/
-    cp excludefile-$fs /root/$dirname/
 done
 
 cd /root/ltp
