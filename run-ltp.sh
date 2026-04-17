@@ -14,6 +14,10 @@ while [ $# -gt 0 ]; do
             LTP_DESTDIR="$2"
             shift 2
             ;;
+        --kirkdir)
+            KIRK_TOP_DIR="$2"
+            shift 2
+            ;;
         --rebuild)
             LTP_REBUILD=1
             shift
@@ -26,12 +30,19 @@ done
 
 DO_TEST=${DO_TEST:-0}
 LTP_TOP_DIR=${LTP_TOP_DIR:-/root/ltp}
+KIRK_TOP_DIR=${KIRK_TOP_DIR:-/root/kirk}
 LTP_DESTDIR=${LTP_DESTDIR:-/}
 LTP_REBUILD=${LTP_REBUILD:-0}
+
+KIRK_MODE=1 # runltpを使って実行する場合には0にする
 
 if [ ! -d "$LTP_TOP_DIR" ]; then
     git clone https://github.com/linux-test-project/ltp $LTP_TOP_DIR
     LTP_REBUILD=1
+fi
+
+if [ ! -d "$KIRK_TOP_DIR" ]; then
+    git clone https://github.com/linux-test-project/kirk $KIRK_TOP_DIR
 fi
 
 cd $LTP_TOP_DIR
@@ -50,8 +61,13 @@ fi
 
 
 if [ "$DO_TEST" = "1" ]; then
-    cd $LTP_DESTDIR/opt/ltp
-    unbuffer ./runltp | tee /root/runltp.log
+    if [ "$KIRK_MODE" = "1" ]; then
+        cd $KIRK_TOP_DIR
+        unbuffer ./kirk -f $(ls $LTP_TOP_DIR/opt/ltp/runtest) | tee /root/kirk.log
+    else
+        # runltpでテストする場合
+        cd $LTP_DESTDIR/opt/ltp
+        unbuffer ./runltp | tee /root/runltp.log
 else
     echo "Skipping tests as DO_TEST is not set to 1."
 fi
