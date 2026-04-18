@@ -63,11 +63,12 @@ fi
 if [ "$DO_TEST" = "1" ]; then
     if [ "$KIRK_MODE" = "1" ]; then
         cd $KIRK_TOP_DIR
-        unbuffer ./kirk -f $(ls $LTP_TOP_DIR/opt/ltp/runtest) | tee /root/kirk.log
+        unbuffer ./kirk -f $(ls $LTP_DEST_DIR/opt/ltp/runtest) | tee /root/kirk.log
     else
         # runltpでテストする場合
         cd $LTP_DESTDIR/opt/ltp
         unbuffer ./runltp | tee /root/runltp.log
+    fi
 else
     echo "Skipping tests as DO_TEST is not set to 1."
 fi
