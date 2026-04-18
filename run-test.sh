@@ -62,15 +62,36 @@ for fs in xfs ext4; do
     mv /root/run-xfstests-$fs.log /root/$dirname/
 done
 
+KIRK_MODE=0
+if [ -d "/root/kirk" ]; then
+    echo "Kirk directory found. Running Kirk tests."
+    KIRK_MODE=1
+else
+    echo "Kirk directory not found. Skipping Kirk tests."
+fi
+
 cd /root/ltp
 git log -1 > /root/$dirname/ltp-gitlog.txt
 cd /root
 
+if [ "$KIRK_MODE" -eq 1 ]; then
+    cd /root/kirk
+    git log -1 > /root/$dirname/kirk-gitlog.txt
+    cd /root
+fi
+
+
 echo "Running LTP tests..."
 /root/util-scripts/run-ltp.sh --runtest
-mv /opt/ltp/results /root/$dirname/ltp-results
-mv /opt/ltp/output /root/$dirname/ltp-output
-mv /root/runltp.log /root/$dirname/
+
+if [ "$KIRK_MODE" -eq 0 ]; then
+    mv /opt/ltp/results /root/$dirname/ltp-results
+    mv /opt/ltp/output /root/$dirname/ltp-output
+    mv /root/runltp.log /root/$dirname/
+else
+    mv /root/kirk.log /root/$dirname/
+fi
+
 
 echo "Generating sosreport..."
 sos report --batch
