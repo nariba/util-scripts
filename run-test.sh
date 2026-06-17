@@ -96,3 +96,9 @@ fi
 echo "Generating sosreport..."
 sos report --batch
 mv /var/tmp/sosreport-* /root/$dirname/
+
+if [ -z "$RESULT_DIR" ]; then
+    echo "RESULT_DIR is not set. Skipping moving results."
+else
+    mv /root/$dirname $RESULT_DIR
+fi
