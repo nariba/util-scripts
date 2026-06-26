@@ -1,46 +1,39 @@
-#!/bin/sh -xe
+#!/bin/sh -ex
 
-# This script is used to build mpykdump for the current kernel.
+PYTHON_VERSION="3.10.15"
 
-PYTHON_VERSION=${1:-3.8.18}
-CURRENT_DIR=$(pwd)
+BUILD_DATE=$(date -u +%Y%m%d)
+MPYKDUMP_TOPDIR=mpykdump-${BUILD_DATE}
 
-# コマンドが存在するかどうかを確認する
-for command in wget git tar; do
-    if ! type $command > /dev/null 2>&1; then
-        echo "$command command not found."
-        exit 1
-    fi
-done
+mkdir -p ${MPYKDUMP_TOPDIR}
+cd ${MPYKDUMP_TOPDIR}
 
-PYTHON_DIRNAME=Python-$PYTHON_VERSION
-PYTHON_TARBALL=$PYTHON_DIRNAME.tgz
-
-wget https://www.python.org/ftp/python/$PYTHON_VERSION/$PYTHON_TARBALL
-git clone https://github.com/crash-utility/crash
-git clone https://git.code.sf.net/p/pykdump/code mpykdump
-
-tar xvf $PYTHON_TARBALL
-cd $PYTHON_DIRNAME
+# Download mpykdump to build Python using the files in mpykdump
+git clone git://git.code.sf.net/p/pykdump/code mpykdump
 
 # Build Python
+wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz
+tar xvfz Python-${PYTHON_VERSION}.tgz
+cd Python-${PYTHON_VERSION}
+
 ./configure \
     CFLAGS=-fPIC \
     --disable-shared \
-    --prefix=$HOME/opt/$PYTHON_DIRNAME
-cp ../mpykdump/Extension/Setup.local-3.8 Modules/Setup.local
-make -j2
-# make test
-cd $CURRENT_DIR
+	--prefix=/home/nariba/opt/python-${PYTHON_VERSION}
+
+mv Modules/Setup.local Modules/Setup.local-org
+cp ../mpykdump/Extension/Setup.local-3.10 Modules/Setup.local
+make -j
+make install
 
 # Build crash
+cd ../
+git clone https://github.com/crash-utility/crash
 cd crash
-make -j2 -k lzo
-cd $CURRENT_DIR
+# Memory dump may be compressed
+make -j4 lzo snappy zstd
 
 # Build mpykdump
-cd mpykdump/Extension
-./configure \
-    -p $CURRENT_DIR/$PYTHON_DIRNAME \
-    -c $CURRENT_DIR/crash
+cd ../mpykdump/Extension
+./configure -p ../../Python-${PYTHON_VERSION} -c ../../crash
 make
